@@ -16,7 +16,10 @@ conf_data.set('VERSION_MIN', VERSION_MINOR)
 
 configure_file(input: 'lchttp.h.in', output: 'lchttp.h', configuration: conf_data)
 
-lib = library('lchttp', 'lchttp.c', version : f'@VERSION_MAJOR@.@VERSION_MINOR@', soversion: '0')
+install_headers('./build/lchttp.h', install_dir: '/usr/local/include/')
+
+lib = library('lchttp', 'lchttp.c', version : f'@VERSION_MAJOR@.@VERSION_MINOR@', soversion: '0', install: true)
+
 
 pkg.generate(libraries: lib,
   version: f'@VERSION_MAJOR@.@VERSION_MINOR@',

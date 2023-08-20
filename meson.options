@@ -1,3 +1,3 @@
 option('version_major', type: 'string', value: '0', description: 'major version str')
-option('version_minor', type: 'string', value: '3', description: 'minor Version Str')
+option('version_minor', type: 'string', value: '4', description: 'minor Version Str')
 option('version_vendor', type: 'string', value: 'cat', description: 'vendor Version Str')
