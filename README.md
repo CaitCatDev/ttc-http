@@ -39,7 +39,7 @@ As an example of how our library works we will show you a demonstartion here in 
          * NOTE: YOU DO NOT HAVE TO FREE THIS STRING 
          * it like request headers is freed upon freeing the request 
          */
-        ret lchttp_request_build(request);
+        ret = lchttp_request_build(request);
         if(ret == LCHTTP_MEMORY_ALLOC) {/*Memory allocation error*/}
 
         const char *str = lchttp_request_get_str(request);
