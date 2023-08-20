@@ -1,4 +1,4 @@
-CC=clang
+CC ?= cc
 
 
 lchttp.so: lchttp.c

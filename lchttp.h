@@ -1,6 +1,23 @@
 #pragma once
 #include <openssl/ssl.h>
 
+
+#define LCHTTP_METHOD_GET "GET"
+#define LCHTTP_METHOD_POST "POST"
+#define LCHTTP_METHOD_DELETE "DELETE"
+#define LCHTTP_METHOD_HEAD "HEAD"
+#define LCHTTP_METHOD_PUT "PUT"
+#define LCHTTP_METHOD_CONNECT "CONNECT"
+#define LCHTTP_METHOD_OPTIONS "OPTIONS"
+#define LCHTTP_METHOD_TRACE "TRACE"
+#define LCHTTP_METHOD_PATCH "PATCH"
+
+#define HTTP_VER_09 ""
+#define HTTP_VER_10 "HTTP/1.0"
+#define HTTP_VER_11 "HTTP/1.1"
+#define HTTP_VER_2 "HTTP/2"
+#define HTTP_VER_3 "HTTP/3"
+
 typedef struct lchttp_request lchttp_request_t;
 typedef struct lchttp_response lchttp_response_t;
 
