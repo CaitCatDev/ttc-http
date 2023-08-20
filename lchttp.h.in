@@ -1,4 +1,12 @@
 #pragma once
+
+
+#define LCHTTP_VER_MAJ @VERSION_MAJOR@
+#define LCHTTP_VER_MIN @VERSION_MIN@
+#define LCHTTP_VER_VENDOR @VERSION_VENDOR@
+
+#define LCHTTP_VER_STR "@VERSION_MAJOR@.@VERSION_MIN@_@VERSION_VENDOR@"
+
 #include <openssl/ssl.h>
 
 
@@ -27,6 +35,7 @@ enum lchttp_RET_CODES {
 	LCHTTP_SUCCESS = 0,
 	LCHTTP_MEMORY_ALLOC = 1,
 };
+
 
 
 lchttp_request_t *lchttp_new_request();
