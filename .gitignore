@@ -1,4 +1,5 @@
-lchttp.so
-lchttp.a
+*.so
+*.o
+*.a
 .cache
 example
