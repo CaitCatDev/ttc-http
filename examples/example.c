@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../lchttp.h"
+#include "../ttc-http.h"
 
 #include <sys/socket.h>
 #include <netdb.h>
@@ -11,7 +11,7 @@
 
 
 int main(int argc, char **argv) {
-	lchttp_request_t *request;
+	ttc_http_request_t *request;
 	struct addrinfo *info;
 	int fd, res, len;
 	SSL_CTX *ctx;
@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
 	char buf[2048];
 
 	if(argc < 2) {
-		printf("USAGE: ./lchttp_example <DOMAIN_NAME>\n");
+		printf("USAGE: ./ttc_http_example <DOMAIN_NAME>\n");
 		return 1;
 	}
 
@@ -59,45 +59,45 @@ int main(int argc, char **argv) {
 
 
 	/*Request*/
-	request = lchttp_new_request();
+	request = ttc_http_new_request();
 
-	lchttp_request_set_path(request, "/");
-	lchttp_request_set_method(request, "GET");
-	lchttp_request_set_http_version(request, "HTTP/1.0");
+	ttc_http_request_set_path(request, "/");
+	ttc_http_request_set_method(request, "GET");
+	ttc_http_request_set_http_version(request, "HTTP/1.0");
 	
-	res = lchttp_request_add_header(request, "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0");
-	if(res == LCHTTP_MEMORY_ALLOC) {
-		printf("lchttp_request_add_header: failed to allocate %m\n");
+	res = ttc_http_request_add_header(request, "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0");
+	if(res == TTC_HTTP_MEMORY_ALLOC) {
+		printf("ttc_http_request_add_header: failed to allocate %m\n");
 		SSL_free(ssl);
 		SSL_CTX_free(ctx);
 		close(fd);
-		lchttp_request_free(request);
+		ttc_http_request_free(request);
 		return 1;
 	}
 
-	res = lchttp_request_add_header(request, "Host", argv[1]);
-	if(res == LCHTTP_MEMORY_ALLOC) {
-		printf("lchttp_request_add_header: failed to allocate %m\n");
+	res = ttc_http_request_add_header(request, "Host", argv[1]);
+	if(res == TTC_HTTP_MEMORY_ALLOC) {
+		printf("ttc_http_request_add_header: failed to allocate %m\n");
 		SSL_free(ssl);
 		SSL_CTX_free(ctx);
 		close(fd);
-		lchttp_request_free(request);
+		ttc_http_request_free(request);
 		return 1;
 	}
 
 	
-	res = lchttp_request_build(request);
-	if(res == LCHTTP_MEMORY_ALLOC) {
-		printf("lchttp_request_build: failed to allocate %m\n");
+	res = ttc_http_request_build(request);
+	if(res == TTC_HTTP_MEMORY_ALLOC) {
+		printf("ttc_http_request_build: failed to allocate %m\n");
 		SSL_free(ssl);
 		SSL_CTX_free(ctx);
 		close(fd);
-		lchttp_request_free(request);
+		ttc_http_request_free(request);
 		return 1;
 	}
 	
 	/*This string shouldn't be null now as we check the last result*/
-	char *str = lchttp_request_get_str(request);
+	char *str = ttc_http_request_get_str(request);
 	printf("REQUEST:\n%s", str);
 	
 	SSL_write(ssl, str, strlen(str));
@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
 	SSL_free(ssl);
 	SSL_CTX_free(ctx);
 	close(fd);
-	lchttp_request_free(request);
+	ttc_http_request_free(request);
 
 
 

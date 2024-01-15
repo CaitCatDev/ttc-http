@@ -4,14 +4,14 @@
 
 CC=clang
 AR=llvm-ar
-COBJS=lchttp.o
+COBJS=ttc-http.o
 INCLUDES=-I./
-TARGET=lchttp.so.0.4
-TARGET_STATIC=lchttp.a
+TARGET=ttc-http.so.0.4
+TARGET_STATIC=ttc-http.a
 
 INSTALL_PREFIX=/usr/local
 
-EXAMPLE=lchttp-example
+EXAMPLE=ttc-http-example
 EXAMPLEOBJS=examples/example.o
 EXAMPLELIBS=-lssl -lcrypto
 
@@ -36,11 +36,11 @@ $(EXAMPLE): $(EXAMPLEOBJS) $(COBJS)
 install: $(TARGET) $(TARGET_STATIC)
 	install -m 755 $(TARGET) /usr/local/lib/lib$(TARGET)
 	install -m 755 $(TARGET_STATIC) /usr/local/lib/lib$(TARGET_STATIC)
-	install -m 644 lchttp.h /usr/local/include/
-	ln -s /usr/local/lib/lib$(TARGET) /usr/local/lib/liblchttp.so
+	install -m 644 ttc-http.h /usr/local/include/
+	ln -s /usr/local/lib/lib$(TARGET) /usr/local/lib/libttc-http.so
 
 uninstall:
-	@rm /usr/local/lib/lib$(TARGET) /usr/local/lib/lib$(TARGET_STATIC) /usr/local/lib/liblchttp.so
+	@rm /usr/local/lib/lib$(TARGET) /usr/local/lib/lib$(TARGET_STATIC) /usr/local/lib/libttc-http.so
 
 
 clean:
