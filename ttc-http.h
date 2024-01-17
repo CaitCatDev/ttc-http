@@ -47,8 +47,8 @@ enum ttc_http_RET_CODES {
 ttc_http_request_t *ttc_http_new_request();
 void ttc_http_request_set_method(ttc_http_request_t *request, char *method);
 void ttc_http_request_set_path(ttc_http_request_t *request, char *path); 
-ttc_http_ret_t ttc_http_request_add_header(ttc_http_request_t *request, char *name, char *value);
-ttc_http_ret_t ttc_http_request_add_data(ttc_http_request_t *request, char *data);
+ttc_http_ret_t ttc_http_request_add_header(ttc_http_request_t *request, const char *name, const char *value);
+ttc_http_ret_t ttc_http_request_add_data(ttc_http_request_t *request, const char *data);
 void ttc_http_request_set_http_version(ttc_http_request_t *request, char *http_ver);
 char *ttc_http_request_get_str(ttc_http_request_t *request);
 ttc_http_ret_t ttc_http_request_build(ttc_http_request_t *request);

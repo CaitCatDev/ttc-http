@@ -271,7 +271,7 @@ ttc_http_response_t *ttc_https_get_response(SSL *ssl) {
 	return response;
 }
 
-ttc_http_ret_t ttc_http_request_add_header(ttc_http_request_t *request, char *name, char *value) {
+ttc_http_ret_t ttc_http_request_add_header(ttc_http_request_t *request, const char *name, const char *value) {
 	char *header;
 	char *tmp;
 	int length; 
@@ -302,7 +302,7 @@ ttc_http_ret_t ttc_http_request_add_header(ttc_http_request_t *request, char *na
 	return 0;
 }
 
-ttc_http_ret_t ttc_http_request_add_data(ttc_http_request_t *request, char *data) {
+ttc_http_ret_t ttc_http_request_add_data(ttc_http_request_t *request, const char *data) {
 	if(request->data) {
 		free(request->data);
 		request->data = NULL;
