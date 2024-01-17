@@ -1,6 +1,7 @@
 #pragma once
 
 
+#include <stdint.h>
 #define TTC_HTTP_VER_MAJ 0
 #define TTC_HTTP_VER_MIN 4
 #define TTC_HTTP_VER_VENDOR "ttc"
@@ -27,7 +28,12 @@
 #define HTTP_VER_3 "HTTP/3"
 
 typedef struct ttc_http_request ttc_http_request_t;
-typedef struct ttc_http_response ttc_http_response_t;
+typedef struct ttc_http_response {
+	uint16_t status;
+	
+	char *headers;
+	char *data;
+} ttc_http_response_t;
 
 typedef int ttc_http_ret_t;
 
@@ -47,3 +53,11 @@ void ttc_http_request_set_http_version(ttc_http_request_t *request, char *http_v
 char *ttc_http_request_get_str(ttc_http_request_t *request);
 ttc_http_ret_t ttc_http_request_build(ttc_http_request_t *request);
 void ttc_http_request_free(ttc_http_request_t *request);
+
+/*0.5 additions*/
+int ttc_http_request_send(ttc_http_request_t *request, int socketfd);
+int ttc_https_request_send(ttc_http_request_t *request, SSL *ssl);
+ttc_http_response_t *ttc_http_get_response(int fd);	
+ttc_http_response_t *ttc_https_get_response(SSL *ssl);
+void ttc_http_response_free(ttc_http_response_t *response);
+	
