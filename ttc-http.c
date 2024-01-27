@@ -11,6 +11,7 @@
 
 #include <openssl/ssl.h>
 
+#include <ttc-log.h>
 #include "./ttc-http.h"
 
 
@@ -50,6 +51,7 @@ int ttc_https_request_send(ttc_http_request_t *request, SSL *ssl) {
 	if(!request->req_str) {
 		return -1;
 	}
+
 	return SSL_write(ssl, request->req_str, strlen(request->req_str));
 }
 
@@ -77,16 +79,12 @@ int ttc_http_chunked_to_unchunk(ttc_http_response_t *response) {
 	return 0;
 }
 
-int ttc_http_response_parse_headers(ttc_http_response_t *response) {
-	char *headers = response->headers;
+int ttc_https_parse_chunked_data(ttc_http_response_t *response, 
+		char *encoding, SSL *ssl) {
+	uint64_t size, length, useage, readout;
+	char *data, outdata;
 
-	char *status_code = strstr(headers, " ");
-	response->status = strtoull(status_code, NULL, 10);
-	
-	char *encoding = strstr(headers, "Transfer-Encoding:");
-	if(!encoding) return 0;
-
-	encoding = &encoding[18];
+	response->data = NULL;
 	/*according to RFC https://www.rfc-editor.org/rfc/rfc2616#section-4.2
 	 * Headers values can be precceded with white space though a single 
 	 * space is preferred meaning in theroy there could be one space
@@ -98,15 +96,82 @@ int ttc_http_response_parse_headers(ttc_http_response_t *response) {
 	
 	/*TODO: Parse other types of encoding*/
 	if(strncmp(encoding, "chunked\r\n", 9) != 0) {
-		printf("Encoding Type isn't recognize\n");
+		TTC_LOG_ERROR("Encoding Type isn't recognize\n");
 		return 1;
 	}
+	
+	size = 256;
+	data = calloc(1, size);
+	readout = 0;
+	useage = 0;
+	while(strncmp(data, "0\r\n", 3) != 0) {
+		useage += SSL_read(ssl, &data[useage], 1);
 
-	return ttc_http_chunked_to_unchunk(response);
+		if(strstr(data, "\r\n")) {
+			length = strtoull(data, NULL, 16);
+			if(length == 0) break;
+			void *tmp = realloc(response->data, length + 1);
+			response->data = tmp;
+			while(readout < length) {
+				readout += SSL_read(ssl, &response->data[readout], length - readout);
+			}
+			response->data[readout] = 0;
+			SSL_read(ssl, data, 2);
+			memset(data, 0, 256);
+			useage = 0;
+		}
+	}
+	SSL_read(ssl, data, 2);
+	response->data[readout] = 0;
+	free(data);	
+	return 0;
+}
+
+int ttc_https_parse_content_length(ttc_http_response_t *response, 
+		char *content_len, SSL *ssl) {
+	uint64_t length, readout;
+	while(isspace(*content_len)) {
+		content_len++;
+	}
+
+	length = strtoull(content_len, NULL, 0);
+	response->data = calloc(1, length + 1);
+
+
+	while(readout < length) {
+		readout += SSL_read(ssl, response->data, length);
+	}
+
+	return 0;
+}
+
+int ttc_https_read_til_close(ttc_http_response_t *response, SSL *ssl) {
+	/*TODO:*/	
+}
+
+int ttc_https_response_parse_headers(ttc_http_response_t *response, SSL *ssl) {
+	char *headers = response->headers;
+
+	char *status_code = strstr(headers, " ");
+	response->status = strtoull(status_code, NULL, 10);
+	
+	char *encoding = strstr(headers, "Transfer-Encoding:");
+	if(encoding) return ttc_https_parse_chunked_data(response, &encoding[18], ssl);
+
+	char *content_len = strstr(headers, "Content-Length:");
+	if(content_len) return ttc_https_parse_content_length(response, &content_len[15], ssl);
+
+	/*according to RFC for HTTP if content lenght or Transfer-Encoding are not
+	 * speficed then the server should close our connection once it's 
+	 * done talking to us.
+	 */
+	return ttc_https_read_til_close(response, ssl);
 }
 
 void ttc_http_response_free(ttc_http_response_t *response) {
-	free(response->data);
+	if(response->data) {
+		free(response->data);
+	}
 	free(response->headers);
 	free(response);
 }
@@ -157,9 +222,9 @@ ttc_http_response_t *ttc_http_get_response(int fd) {
 	header_end = strstr(data, "\r\n\r\n");
 	if(!header_end) {
 		/*Header End not found*/
-		printf("We where unable to find the end of the headers despite\n"
-				"polling for the response is it a valie HTTP response?\n"
-				"response we errored on:\n%s\n", data);
+		TTC_LOG_ERROR("We where unable to find the end of the headers despite\n"
+				"\tpolling for the response is it a valie HTTP response?\n"
+				"\tresponse we errored on:\n%s\n", data);
 
 		free(response);
 		free(data);
@@ -184,8 +249,6 @@ ttc_http_response_t *ttc_http_get_response(int fd) {
 		return NULL;
 	}
 
-	ttc_http_response_parse_headers(response);
-
 	free(data);
 	return response;
 }
@@ -193,11 +256,11 @@ ttc_http_response_t *ttc_http_get_response(int fd) {
 ttc_http_response_t *ttc_https_get_response(SSL *ssl) {
 	ttc_http_response_t *response;
 	struct pollfd pfd;
-	int fd;
+	int fd, res;
+	char *data, *header_end, transfer[257];
+	size_t size, length;
 
-	char *data, *header_end;
-	size_t size;
-	size_t length; 
+	transfer[256] = 0;
 
 	response = calloc(1, sizeof(*response));
 	if(!response) {
@@ -220,54 +283,36 @@ ttc_http_response_t *ttc_https_get_response(SSL *ssl) {
 	pfd.revents = 0;
 
 	while((fd = poll(&pfd, 1, 1000))) {
-		length += SSL_read(ssl, &data[length], size -  length);
-		if(length >= size) {
-			void *tmp = realloc(data, size + 256 + 1);
-			if(!tmp) {
-				free(data);
-				free(response);
-				return NULL;
-			}
-			data = tmp;
-			size += 256;
+		uint64_t readoff = 256;
+		void *tmp;
+		SSL_peek(ssl, transfer, readoff);
+		
+		memcpy(&data[length], transfer, readoff);
+		length += 256;
+		data[length] = 0;
+
+		if((tmp = strstr(data, "\r\n\r\n"))) {
+			length -= 256;
+			uint64_t rsize = (uint64_t)tmp - (uint64_t)data + 2;
+			readoff = rsize - length + 2;
+			data[rsize] = 0;
+			int bytes = SSL_read(ssl, transfer, readoff);
+			transfer[bytes] = 0;
+			break;
 		}
-	}
-	/*Make data a valid Cstring*/
-	data[length] = 0;
-	size_t header_size;
-	header_end = strstr(data, "\r\n\r\n");
-	if(!header_end) {
-		/*Header End not found*/
-		printf("We where unable to find the end of the headers despite\n"
-				"polling for the response is it a valie HTTP response?\n"
-				"response we errored on:\n%s\n", data);
 
-		free(response);
-		free(data);
-		return NULL;
+		tmp = realloc(data, size + 256 + 1);
+		data = tmp;
+		size += 256;
+
+		SSL_read(ssl, transfer, readoff);
 	}
 
-	/*Sizes of the headers + 2 for last new line*/
-	header_size = header_end - data + 2;
 	
-	response->data = strdup(&header_end[4]);
-	if(!response->data) {
-		free(response);
-		free(data);
-		return NULL;
-	}
+	response->headers = data;
 
-	response->headers = strndup(data, header_size + 2);
-	if(!response->headers) {
-		free(response->data);
-		free(response);
-		free(data);
-		return NULL;
-	}
+	ttc_https_response_parse_headers(response, ssl);
 
-	ttc_http_response_parse_headers(response);
-
-	free(data);
 	return response;
 }
 

@@ -13,13 +13,13 @@ INSTALL_PREFIX=/usr/local
 
 EXAMPLE=ttc-http-example
 EXAMPLEOBJS=examples/example.o
-EXAMPLELIBS=-lssl -lcrypto
+EXAMPLELIBS=-lttc-log -lssl -lcrypto
 
 all: $(TARGET) $(TARGET_STATIC) $(EXAMPLE)
 
 .c.o:
 	@echo $(CC) $@
-	@$(CC) $(INCLUDES) -c $< -o $@
+	@$(CC) -g -O0 $(INCLUDES) -c $< -o $@
 
 $(TARGET_STATIC): $(COBJS)
 	@echo $(AR) $@
@@ -27,7 +27,7 @@ $(TARGET_STATIC): $(COBJS)
 
 $(TARGET): $(COBJS)
 	@echo linking $@
-	@$(CC) -shared $(COBJS) -o $@
+	@$(CC) -shared -g -O0 $(COBJS) -o $@
 
 $(EXAMPLE): $(EXAMPLEOBJS) $(COBJS)
 	@echo linking $@
