@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>
 
 #include <poll.h>
 #include <sys/socket.h>
@@ -16,12 +17,12 @@
 
 
 struct ttc_http_request {
-	char *method;
-	char *path;
+	const char *method;
+	const char *path;
 	char *headers;
 	size_t hdr_len;
 
-	char *http_version;
+	const char *http_version;
 	char *data;
 
 	char *req_str;
@@ -31,11 +32,11 @@ ttc_http_request_t *ttc_http_new_request() {
 	return calloc(1, sizeof(ttc_http_request_t));
 }
 
-void ttc_http_request_set_method(ttc_http_request_t *request, char *method) {
+void ttc_http_request_set_method(ttc_http_request_t *request, const char *method) {
 	request->method = method; /*set the method*/
 }
 
-void ttc_http_request_set_path(ttc_http_request_t *request, char *path) {
+void ttc_http_request_set_path(ttc_http_request_t *request, const char *path) {
 	request->path = path;
 }
 
@@ -81,7 +82,7 @@ int ttc_http_chunked_to_unchunk(ttc_http_response_t *response) {
 
 int ttc_https_parse_chunked_data(ttc_http_response_t *response, 
 		char *encoding, SSL *ssl) {
-	uint64_t size, length, useage, readout;
+	uint64_t size, length, useage, readout, total_size;
 	char *data, outdata;
 
 	response->data = NULL;
@@ -100,23 +101,29 @@ int ttc_https_parse_chunked_data(ttc_http_response_t *response,
 		return 1;
 	}
 	
+	total_size = 0;
 	size = 256;
 	data = calloc(1, size);
 	readout = 0;
 	useage = 0;
 	while(strncmp(data, "0\r\n", 3) != 0) {
 		useage += SSL_read(ssl, &data[useage], 1);
-
 		if(strstr(data, "\r\n")) {
 			length = strtoull(data, NULL, 16);
 			if(length == 0) break;
-			void *tmp = realloc(response->data, length + 1);
+			total_size += length;
+			void *tmp = realloc(response->data, total_size + 1);
 			response->data = tmp;
-			while(readout < length) {
-				readout += SSL_read(ssl, &response->data[readout], length - readout);
+			while(readout < total_size) {
+				readout += SSL_read(ssl, &response->data[readout], total_size - readout);
 			}
 			response->data[readout] = 0;
-			SSL_read(ssl, data, 2);
+			memset(data, 0, 256);
+			int readin = SSL_read(ssl, data, 2);
+			if(strncmp(data, "\r\n", 2) != 0) {
+				TTC_LOG_ERROR("Chunk end is not equal to \\r\\n\n");
+				return 1; /*Bail out bad chunk or we read it wrong*/
+			}
 			memset(data, 0, 256);
 			useage = 0;
 		}
@@ -134,7 +141,9 @@ int ttc_https_parse_content_length(ttc_http_response_t *response,
 		content_len++;
 	}
 
+	readout = 0;
 	length = strtoull(content_len, NULL, 0);
+	TTC_LOG_DEBUG("Length to read lu\n", length);
 	response->data = calloc(1, length + 1);
 
 
@@ -146,6 +155,7 @@ int ttc_https_parse_content_length(ttc_http_response_t *response,
 }
 
 int ttc_https_read_til_close(ttc_http_response_t *response, SSL *ssl) {
+	return -1;
 	/*TODO:*/	
 }
 
@@ -159,8 +169,10 @@ int ttc_https_response_parse_headers(ttc_http_response_t *response, SSL *ssl) {
 	if(encoding) return ttc_https_parse_chunked_data(response, &encoding[18], ssl);
 
 	char *content_len = strstr(headers, "Content-Length:");
-	if(content_len) return ttc_https_parse_content_length(response, &content_len[15], ssl);
-
+	if(content_len) {
+		TTC_LOG_WARN("Using Content Length\n");
+		return ttc_https_parse_content_length(response, &content_len[15], ssl);
+	}
 	/*according to RFC for HTTP if content lenght or Transfer-Encoding are not
 	 * speficed then the server should close our connection once it's 
 	 * done talking to us.
@@ -282,11 +294,23 @@ ttc_http_response_t *ttc_https_get_response(SSL *ssl) {
 	pfd.events = POLLIN;
 	pfd.revents = 0;
 
-	while((fd = poll(&pfd, 1, 1000))) {
+	/*Check if FD can be read or if open SSL has bytes cached
+	 * in the underlying BIO before exit */
+	while(SSL_pending(ssl) || poll(&pfd, 1, -1)) {
 		uint64_t readoff = 256;
+		uint64_t actual_read = 0;
 		void *tmp;
-		SSL_peek(ssl, transfer, readoff);
 		
+		actual_read = SSL_peek(ssl, transfer, readoff);
+		if (actual_read <= 0 && SSL_get_error(ssl, 0) != SSL_ERROR_NONE) {
+			TTC_LOG_ERROR("Failed to read server response.\n"
+					"Socket was close unexpectly: errno = %s\n"
+					"Data before free was: %s\n", strerror(errno), data);
+			free(data);
+			free(response);
+			return NULL;
+		}
+
 		memcpy(&data[length], transfer, readoff);
 		length += 256;
 		data[length] = 0;
@@ -362,7 +386,7 @@ ttc_http_ret_t ttc_http_request_add_data(ttc_http_request_t *request, const char
 	return TTC_HTTP_SUCCESS;
 }
 
-void ttc_http_request_set_http_version(ttc_http_request_t *request, char *http_ver) {
+void ttc_http_request_set_http_version(ttc_http_request_t *request, const char *http_ver) {
 	request->http_version = http_ver;
 }
 
