@@ -304,8 +304,8 @@ ttc_http_response_t *ttc_https_get_response(SSL *ssl) {
 		actual_read = SSL_peek(ssl, transfer, readoff);
 		if (actual_read <= 0 && SSL_get_error(ssl, 0) != SSL_ERROR_NONE) {
 			TTC_LOG_ERROR("Failed to read server response.\n"
-					"Socket was close unexpectly: errno = %s\n"
-					"Data before free was: %s\n", strerror(errno), data);
+					"Socket was close unexpectly: errno = %d\n"
+					"Data before free was: %s\n", SSL_get_error(ssl, 0), data);
 			free(data);
 			free(response);
 			return NULL;

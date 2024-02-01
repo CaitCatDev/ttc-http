@@ -31,7 +31,7 @@ $(TARGET): $(COBJS)
 
 $(EXAMPLE): $(EXAMPLEOBJS) $(COBJS)
 	@echo linking $@
-	@$(CC) $(EXAMPLELIBS) $(EXAMPLEOBJS) $(COBJS) -o $@
+	@$(CC) $(EXAMPLEOBJS) $(COBJS) -o $@ $(EXAMPLELIBS)
 
 install: $(TARGET) $(TARGET_STATIC)
 	install -m 755 $(TARGET) /usr/local/lib/lib$(TARGET)
