@@ -1,0 +1,12 @@
+#pragma once
+
+
+#define TTC_HTTP_VER_MAJ 0
+#define TTC_HTTP_VER_MIN 6
+#define TTC_HTTP_VER_VENDOR "ttc"
+
+#define TTC_HTTP_VER_STR TTC_HTTP_VER_MAJ # "." TTC_HTTP_VER_MIN # "_" TTC_HTTP_VER_VENDOR
+
+#define TTC_HTTP_FN_FAILED -1
+#define TTC_HTTP_FN_SUCCESS 0
+

@@ -3,3 +3,5 @@
 *.a
 .cache
 example
+ttc-http-example
+ttc-http.so.0.6

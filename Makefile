@@ -4,9 +4,9 @@
 
 CC=clang
 AR=llvm-ar
-COBJS=ttc-http.o
-INCLUDES=-I./
-TARGET=ttc-http.so.0.4
+COBJS=src/ttc-requests.o src/ttc-response.o src/ttc-socket.o
+INCLUDES=-I./includes
+TARGET=ttc-http.so.0.6
 TARGET_STATIC=ttc-http.a
 
 INSTALL_PREFIX=/usr/local
@@ -36,11 +36,12 @@ $(EXAMPLE): $(EXAMPLEOBJS) $(COBJS)
 install: $(TARGET) $(TARGET_STATIC)
 	install -m 755 $(TARGET) /usr/local/lib/lib$(TARGET)
 	install -m 755 $(TARGET_STATIC) /usr/local/lib/lib$(TARGET_STATIC)
-	install -m 644 ttc-http.h /usr/local/include/
+	cp -r ./includes/ttc-http /usr/local/include/
 	ln -s /usr/local/lib/lib$(TARGET) /usr/local/lib/libttc-http.so
 
 uninstall:
-	@rm /usr/local/lib/lib$(TARGET) /usr/local/lib/lib$(TARGET_STATIC) /usr/local/lib/libttc-http.so
+	@rm -rf /usr/local/lib/lib$(TARGET) /usr/local/include/ttc-http /usr/local/lib/lib$(TARGET_STATIC) /usr/local/lib/libttc-http.so
+
 
 
 clean:
