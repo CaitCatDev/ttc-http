@@ -4,9 +4,9 @@
 
 CC=clang
 AR=llvm-ar
-COBJS=src/ttc-requests.o src/ttc-response.o src/ttc-socket.o
+COBJS=src/ttc-requests.o src/ttc-response.o src/ttc-socket.o src/ttc-websocket.o
 INCLUDES=-I./includes
-TARGET=ttc-http.so.0.7
+TARGET=ttc-http.so.0.8
 TARGET_STATIC=ttc-http.a
 
 INSTALL_PREFIX=/usr/local

@@ -8,6 +8,7 @@
 #include <poll.h>
 
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <ttc-log.h>
@@ -189,6 +190,19 @@ ttc_http_socket_t *ttc_http_new_socket(const char *host, const char *port, SSL_C
 	return socket;
 }
 
+int ttc_http_socket_send_data(ttc_http_socket_t *sock, void *data, uint64_t length) {
+	switch(sock->type) {
+		case TtcSocketSSL:
+			SSL_write(sock->ssl, data, length);
+			return 0;
+		case TtcSocketHTTP:
+			send(sock->fd, data, length, 0);
+			return 0;
+	}
+
+	return -1;
+}
+
 int ttc_http_socket_send_request(ttc_http_socket_t *sock, ttc_http_request_t *request) {
 	ttc_http_request_build(request);
 	printf("Sending %s\n", request->req_str);
@@ -205,11 +219,19 @@ int ttc_http_socket_send_request(ttc_http_socket_t *sock, ttc_http_request_t *re
 }
 
 void ttc_http_socket_free(ttc_http_socket_t *socket) {
+	if(!socket) {
+		return;
+	}
+
+	if(socket->ssl) {
 		SSL_shutdown(socket->ssl);
 
 		SSL_free(socket->ssl);
 
+	}
+	if(socket->fd > -1) {
 		close(socket->fd);
+	}
 
 		free(socket);
 }
