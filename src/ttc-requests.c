@@ -206,11 +206,12 @@ int ttc_http_request_build(ttc_http_request_t *request) {
 
 	/*We rebuilding*/
 	if(request->req_str) {
-		if(!request->dirty) {
+		if(request->dirty) {
 			/*Skip rebuild if nothing changed*/
+			return TTC_HTTP_FN_SUCCESS;
 		}
-		free(request->header_str);
-		request->header_str = NULL;
+		free(request->req_str);
+		request->req_str = NULL;
 	}
 
 	length = snprintf(NULL, 0, "%s %s %s",//%s\r\n\r\n%s",
