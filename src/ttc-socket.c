@@ -205,7 +205,7 @@ int ttc_http_socket_send_data(ttc_http_socket_t *sock, void *data, uint64_t leng
 
 int ttc_http_socket_send_request(ttc_http_socket_t *sock, ttc_http_request_t *request) {
 	ttc_http_request_build(request);
-	printf("Sending %s\n", request->req_str);
+	TTC_LOG_INFO("Sending %s\n", request->req_str);
 	switch(sock->type) {
 		case TtcSocketSSL:
 			SSL_write(sock->ssl, request->req_str, strlen(request->req_str));

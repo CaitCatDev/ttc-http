@@ -151,7 +151,6 @@ int ttc_http_request_add_header(ttc_http_request_t *request, const char *name, c
 	}
 
 	ttc_http_header_insert(&request->headers, header);
-	printf("Added Header: %s %s\n", header->name, header->value);
 	request->hdr_count++;
 	request->dirty = 1;
 
@@ -228,7 +227,6 @@ int ttc_http_request_build(ttc_http_request_t *request) {
 			request->http_version);
 
 	prev = length;
-	printf("Headers: %p\n", request->headers);
 	for(tmp = request->headers; tmp; tmp = tmp->next) {
 		length = snprintf(NULL, 0, "\r\n%s: %s", tmp->name, tmp->value);
 

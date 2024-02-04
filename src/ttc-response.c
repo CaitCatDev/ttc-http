@@ -85,7 +85,6 @@ int ttc_https_parse_chunked_data(ttc_http_response_t *response,
 		ttc_http_socket_read(sock, &data[useage], 1, &hold);
 		useage += hold;
 		if(strstr(data, "\r\n")) {
-			printf("data on in: %s\n", data);
 			length = strtoull(data, NULL, 16);
 			if(length == 0) break;
 			total_size += length;
@@ -227,7 +226,6 @@ ttc_http_response_t *ttc_http_get_response(ttc_http_socket_t *sock) {
 
 
 	response->headers = data;
-	printf("headers: %s\n", response->headers);
 	ttc_https_response_parse_headers(response, sock);
 
 	return response;
