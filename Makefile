@@ -6,7 +6,7 @@ CC=clang
 AR=llvm-ar
 COBJS=src/ttc-requests.o src/ttc-response.o src/ttc-socket.o
 INCLUDES=-I./includes
-TARGET=ttc-http.so.0.6
+TARGET=ttc-http.so.0.7
 TARGET_STATIC=ttc-http.a
 
 INSTALL_PREFIX=/usr/local

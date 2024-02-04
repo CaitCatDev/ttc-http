@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <poll.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <poll.h>
@@ -80,8 +81,11 @@ int ttc_https_parse_chunked_data(ttc_http_response_t *response,
 	readout = 0;
 	useage = 0;
 	while(strncmp(data, "0\r\n", 3) != 0) {
+		hold = 0;
 		ttc_http_socket_read(sock, &data[useage], 1, &hold);
+		useage += hold;
 		if(strstr(data, "\r\n")) {
+			printf("data on in: %s\n", data);
 			length = strtoull(data, NULL, 16);
 			if(length == 0) break;
 			total_size += length;
@@ -92,7 +96,7 @@ int ttc_https_parse_chunked_data(ttc_http_response_t *response,
 				readout += hold;
 			}
 			response->data[readout] = 0;
-			ttc_http_socket_read(sock, &response->data[readout], 2, &hold);
+			ttc_http_socket_read(sock, data, 2, &hold);
 			if(strncmp(data, "\r\n", 2) != 0) {
 				TTC_LOG_ERROR("Chunk end is not equal to \\r\\n\n");
 				return 1; /*Bail out bad chunk or we read it wrong*/
@@ -102,7 +106,7 @@ int ttc_https_parse_chunked_data(ttc_http_response_t *response,
 		}
 	}
 
-	ttc_http_socket_read(sock, &response->data[readout], 2, &hold);
+	ttc_http_socket_read(sock, data, 2, &hold);
 	response->data[readout] = 0;
 	free(data);
 	return 0;
@@ -114,13 +118,13 @@ int ttc_https_parse_content_length(ttc_http_response_t *response,
 	while(isspace(*content_len)) {
 		content_len++;
 	}
-	printf("Headers %s\n", response->headers);
 	readout = 0;
 	length = strtoull(content_len, NULL, 0);
 	response->data = calloc(1, length + 1);
 
 
 	while(length) {
+		readout = 0;
 		ttc_http_socket_read(sock, response->data, length, &readout);
 		length -= readout;
 	}

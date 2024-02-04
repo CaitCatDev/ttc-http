@@ -4,4 +4,4 @@
 .cache
 example
 ttc-http-example
-ttc-http.so.0.6
+ttc-http.so.*.*

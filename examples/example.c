@@ -1,10 +1,12 @@
 #include "ttc-http/sockets.h"
+#include <openssl/evp.h>
 #include <stdio.h>
 #include <string.h>
 
 #include <sys/socket.h>
 #include <netdb.h>
 #include <openssl/ssl.h>
+#include <ttc-log.h>
 #include <unistd.h>
 
 #include <ttc-http/http.h>
@@ -15,6 +17,8 @@ SSL_CTX *ssl_init() {
 	SSL_library_init();
 
 	OpenSSL_add_all_algorithms();
+	OpenSSL_add_all_ciphers();
+	OpenSSL_add_all_digests();
 	SSL_load_error_strings();
 
 	return SSL_CTX_new(TLS_client_method());
@@ -34,10 +38,15 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
+	ttc_log_init_from_file(stderr);
+
 	ctx = ssl_init();
 
 	sock = ttc_http_new_socket(argv[1], "443", ctx);
-
+	if(!sock) {
+		SSL_CTX_free(ctx);
+		return 1;
+	}
 
 	/*Request*/
 	request = ttc_http_new_request();
@@ -70,7 +79,6 @@ int main(int argc, char **argv) {
 
 	response = ttc_http_get_response(sock);
 
-	printf("Response: %s\n", response->data);
 
 	ttc_http_socket_free(sock);
 	ttc_http_request_free(request);
