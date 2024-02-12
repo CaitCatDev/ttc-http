@@ -3,9 +3,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <sys/socket.h>
 #include <netdb.h>
 #include <openssl/ssl.h>
+#include <sys/socket.h>
 #include <ttc-log.h>
 #include <unistd.h>
 
@@ -33,17 +33,15 @@ int main(int argc, char **argv) {
 	SSL *ssl;
 	char buf[2048];
 
-	if(argc < 2) {
+	if (argc < 2) {
 		printf("USAGE: ./ttc_http_example <DOMAIN_NAME>\n");
 		return 1;
 	}
-
 	ttc_log_init_from_file(stderr);
-
 	ctx = ssl_init();
 
 	sock = ttc_http_new_socket(argv[1], "443", ctx);
-	if(!sock) {
+	if (!sock) {
 		SSL_CTX_free(ctx);
 		return 1;
 	}
@@ -55,8 +53,10 @@ int main(int argc, char **argv) {
 	ttc_http_request_set_method(request, "GET");
 	ttc_http_request_set_http_version(request, "HTTP/1.1");
 
-	res = ttc_http_request_add_header(request, "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0");
-	if(res == TTC_HTTP_FN_FAILED) {
+	res = ttc_http_request_add_header(
+			request, "User-Agent",
+			"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0");
+	if (res == TTC_HTTP_FN_FAILED) {
 		printf("ttc_http_request_add_header: failed to allocate %m\n");
 		SSL_free(ssl);
 		SSL_CTX_free(ctx);
@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
 	}
 
 	res = ttc_http_request_add_header(request, "Host", argv[1]);
-	if(res == TTC_HTTP_FN_FAILED) {
+	if (res == TTC_HTTP_FN_FAILED) {
 		printf("ttc_http_request_add_header: failed to allocate %m\n");
 		SSL_free(ssl);
 		SSL_CTX_free(ctx);
@@ -76,9 +76,9 @@ int main(int argc, char **argv) {
 	}
 
 	res = ttc_http_socket_send_request(sock, request);
-
 	response = ttc_http_get_response(sock);
 
+	printf("%s\n", response->data);
 
 	ttc_http_socket_free(sock);
 	ttc_http_request_free(request);
