@@ -148,6 +148,24 @@ static SSL *ttc_http_ssl_socket_setup(SSL_CTX *ctx, int fd, const char *hostname
 		return NULL;
 	}
 
+	param = SSL_get0_param(ssl);
+
+	/* Enable automatic hostname checks */
+	X509_VERIFY_PARAM_set_hostflags(param, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
+	if (!X509_VERIFY_PARAM_set1_host(param, hostname, strlen(hostname))) {
+		SSL_free(ssl);
+		TTC_LOG_ERROR("Failed to set automatic hostname checks\n");
+		return NULL;
+	}
+
+	/*provide sni for things that need it*/
+	SSL_set_tlsext_host_name(ssl, hostname);
+	SSL_set_verify(ssl, SSL_VERIFY_PEER, verify_callback);
+	/*Max depth*/
+	SSL_set_verify_depth(ssl, 4);
+
+	SSL_CTX_set_default_verify_paths(ctx);
+
 	if ((res = SSL_connect(ssl)) != 1) {
 		SSL_free(ssl);
 		TTC_LOG_ERROR("Failed to SSL connect to host: %s\n", hostname);
