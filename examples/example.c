@@ -28,10 +28,8 @@ int main(int argc, char **argv) {
 	ttc_http_request_t *request;
 	ttc_http_response_t *response;
 	ttc_http_socket_t *sock;
-	int fd, res, len;
+	int res;
 	SSL_CTX *ctx;
-	SSL *ssl;
-	char buf[2048];
 
 	if (argc < 2) {
 		printf("USAGE: ./ttc_http_example <DOMAIN_NAME>\n");
@@ -58,9 +56,7 @@ int main(int argc, char **argv) {
 			"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0");
 	if (res == TTC_HTTP_FN_FAILED) {
 		printf("ttc_http_request_add_header: failed to allocate %m\n");
-		SSL_free(ssl);
 		SSL_CTX_free(ctx);
-		close(fd);
 		ttc_http_request_free(request);
 		return 1;
 	}
@@ -68,9 +64,7 @@ int main(int argc, char **argv) {
 	res = ttc_http_request_add_header(request, "Host", argv[1]);
 	if (res == TTC_HTTP_FN_FAILED) {
 		printf("ttc_http_request_add_header: failed to allocate %m\n");
-		SSL_free(ssl);
 		SSL_CTX_free(ctx);
-		close(fd);
 		ttc_http_request_free(request);
 		return 1;
 	}
