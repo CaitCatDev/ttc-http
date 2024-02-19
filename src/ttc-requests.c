@@ -213,7 +213,7 @@ int ttc_http_request_build(ttc_http_request_t *request) {
 	char *holder;
 
 	if(!request) {
-		TTC_HTTP_FN_FAILED;
+		return TTC_HTTP_FN_FAILED;
 	}
 
 	/*We rebuilding*/
