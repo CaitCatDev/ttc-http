@@ -1,8 +1,8 @@
 #pragma
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include <openssl/ssl.h>
 
@@ -35,8 +35,8 @@ enum TTC_WS_CLOSE_CODES {
 typedef struct ttc_ws_wrreq {
 	bool fin;
 	bool mask;
-	uint8_t res: 3;
-	uint8_t opcode: 4;
+	uint8_t res : 3;
+	uint8_t opcode : 4;
 	size_t len;
 	char *data;
 } ttc_ws_wrreq_t;
@@ -58,3 +58,9 @@ ttc_ws_buffer_t *ttc_ws_read(ttc_ws_t *ws);
 int ttc_ws_write(ttc_ws_t *ws, ttc_ws_wrreq_t req);
 ttc_ws_t *ttc_ws_create_from_host(const char *host, const char *port, SSL_CTX *ctx);
 
+/** All though this isn't the main purpose of the library just
+ *  expose these symbols in case someone wants to use them
+ */
+uint16_t ttc_ws_endian_swap16(uint16_t innum);
+uint32_t ttc_ws_endian_swap32(uint32_t innum);
+uint64_t ttc_ws_endian_swap64(uint64_t innum);

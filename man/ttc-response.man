@@ -1,0 +1,37 @@
+.TH TTCHTTP 3 19-FEB-2024 ttc_response-manpages
+.SH NAME
+
+.SH LIBRARY
+TTCHTTP response functions (ttc-http, -lttc-http)
+
+.SH SYNOPSIS
+.nf
+.PP
+.B "void ttc_http_response_free(ttc_http_response_t *response);"
+.B "ttc_http_response_t *ttc_http_get_response(ttc_http_socket_t *sock);"
+.PP
+
+.SH DESCRIPTION
+.B Functions to get one HTTP response from a socket connection
+
+.B ttc_http_get_response get a HTTP response from the ttc_http_socket_t socket. Returns a valid
+pointer on success or NULL on error.
+
+.B ttc_http_response_free free a HTTP response that has been obtained from ttc_http_get_response
+
+.SH DATA STRUCTURES
+.nf
+.PP
+
+typedef struct ttc_http_response {
+	uint16_t status;
+
+	char *headers;
+	char *data;
+} ttc_http_response_t;
+
+.SH SEE ALSO
+.BR SSL_new(3)
+.BR SSL_CTX_new(3)
+.BR ssl(7)
+.BR ttc-socket

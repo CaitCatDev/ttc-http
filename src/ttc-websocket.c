@@ -6,8 +6,8 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include <ttc-log.h>
 #include <pthread.h>
+#include <ttc-log.h>
 
 struct ttc_ws {
 	pthread_mutex_t rlock, wlock;
@@ -31,24 +31,23 @@ struct ttc_ws {
 typedef struct ttc_ws_frame {
 #if BYTE_ORDER == LITTLE_ENDIAN
 
-	uint8_t opcode: 4; /*opcode*/
-	uint8_t res: 3; /*3 bit reserve/extension field*/
-	uint8_t fin: 1; /*1 bit final marker*/
-	uint8_t len: 7; /*length*/
-	uint8_t mask: 1; /*Data is masked?*/
+	uint8_t opcode : 4; /*opcode*/
+	uint8_t res : 3;    /*3 bit reserve/extension field*/
+	uint8_t fin : 1;    /*1 bit final marker*/
+	uint8_t len : 7;    /*length*/
+	uint8_t mask : 1;   /*Data is masked?*/
 
 #elif BYTE_ORDER == BIG_ENDIAN
 
-	uint8_t fin: 1;
-	uint8_t res: 3;
-	uint8_t opcode: 4;
-	uint8_t mask: 1;
-	uint8_t len: 7;
+	uint8_t fin : 1;
+	uint8_t res : 3;
+	uint8_t opcode : 4;
+	uint8_t mask : 1;
+	uint8_t len : 7;
 
 #endif
 	uint8_t extdata[];
-}__attribute__((packed)) ttc_ws_frame_t;
-
+} __attribute__((packed)) ttc_ws_frame_t;
 
 /*byteN refers to that byte position in a multi byte number
  * going left to right
@@ -68,7 +67,6 @@ uint16_t ttc_ws_endian_swap16(uint16_t innum) {
 	return ret;
 }
 
-
 uint32_t ttc_ws_endian_swap32(uint32_t innum) {
 	uint32_t hbyte, lbyte, lmid_byte, hmid_byte;
 	uint32_t ret;
@@ -76,7 +74,7 @@ uint32_t ttc_ws_endian_swap32(uint32_t innum) {
 	hbyte = (innum >> 24) & 0xff;
 	hmid_byte = (innum >> 16) & 0xff;
 	lmid_byte = (innum >> 8) & 0xff;
-	lbyte = (innum) & 0xff;
+	lbyte = (innum) &0xff;
 
 	ret = hbyte | (hmid_byte << 8) | (lmid_byte << 16) | lbyte << 24;
 
@@ -96,19 +94,17 @@ uint64_t ttc_ws_endian_swap64(uint64_t innum) {
 	byte6 = (innum >> 8) & 0xff;
 	byte7 = innum & 0xff;
 
-
-	ret = byte0 | byte1 << 8 | byte2 << 16 | byte3 << 24 |
-		byte4 << 32 | byte5 << 40 | byte6 << 48 | byte7 << 56;
+	ret = byte0 | byte1 << 8 | byte2 << 16 | byte3 << 24 | byte4 << 32 | byte5 << 40 | byte6 << 48 |
+				byte7 << 56;
 
 	return ret;
 }
-
 
 /*Mask our data to mee with the WS RFC format for clients*/
 static char *ttc_ws_mask_data(uint8_t *mask_key, char *data, size_t length) {
 	char *output = calloc(1, length);
 
-	for(size_t ind = 0; ind < length; ++ind) {
+	for (size_t ind = 0; ind < length; ++ind) {
 		output[ind] = data[ind] ^ mask_key[ind % 4];
 	}
 
@@ -120,22 +116,21 @@ static uint8_t *ttc_random_array(size_t len) {
 	uint8_t *output;
 
 	/*Sanity check the users input*/
-	if(len == 0) {
+	if (len == 0) {
 		TTC_LOG_WARN("Invalid parameter passed in\n");
 		return NULL;
 	}
 
-
 	output = calloc(sizeof(uint8_t), len);
-	if(output == NULL) {
+	if (output == NULL) {
 		TTC_LOG_ERROR("calloc failed %s\n", strerror(errno));
 		return NULL;
 	}
 
 	srand(time(NULL));
 
-	for(index = 0; index < len; ++index) {
-		output[index] = ((uint8_t)rand() % 0xff);
+	for (index = 0; index < len; ++index) {
+		output[index] = ((uint8_t) rand() % 0xff);
 	}
 
 	return output;
@@ -143,11 +138,11 @@ static uint8_t *ttc_random_array(size_t len) {
 
 static const char b64table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-static size_t ttc_b64_encode_len(size_t lenin) {
+static size_t ttc_ws_b64_encode_len(size_t lenin) {
 	size_t lenout = lenin;
 
 	/*Make number cleanly divisible by 3 if it is not already*/
-	if(lenout % 3) {
+	if (lenout % 3) {
 		lenout -= (lenout % 3);
 		lenout += 3;
 	}
@@ -158,38 +153,38 @@ static size_t ttc_b64_encode_len(size_t lenin) {
 	return lenout;
 }
 
-static char *ttc_b64_encode(const uint8_t *data, size_t len) {
+static char *ttc_ws_b64_encode(const uint8_t *data, size_t len) {
 	size_t index, outindex, outlen;
 	uint32_t block;
 	char *outstr;
 
-	if(!data || !len) {
+	if (!data || !len) {
 		errno = -EINVAL;
 		TTC_LOG_WARN("%s: Invlaid input\n");
 		return NULL;
 	}
 
-	outlen = ttc_b64_encode_len(len); /*calc length needed*/
+	outlen = ttc_ws_b64_encode_len(len);       /*calc length needed*/
 	outstr = calloc(sizeof(char), outlen + 1); /*allocate length +1*/
 
-	if(outstr == NULL) {
+	if (outstr == NULL) {
 		TTC_LOG_ERROR("%s: calloc error %s\n", strerror(errno));
 		return NULL;
 	}
 
-	for(index = 0, outindex = 0; index < len; index += 3, outindex += 4) {
+	for (index = 0, outindex = 0; index < len; index += 3, outindex += 4) {
 		/*construct a 24-bit int*/
 		block = data[index];
-		block = index+1 < len ? block << 8 | data[index+1] : block << 8;
-		block = index+2 < len ? block << 8 | data[index+2] : block << 8;
+		block = index + 1 < len ? block << 8 | data[index + 1] : block << 8;
+		block = index + 2 < len ? block << 8 | data[index + 2] : block << 8;
 
 		/*output the first two characters*/
 		outstr[outindex] = b64table[(block >> 18) & 0x3F];
 		outstr[outindex + 1] = b64table[(block >> 12) & 0x3f];
 
 		/*Either set the next two characters or pad them if there are none*/
-		outstr[outindex + 2] = index + 1 < len ? b64table[(block >> 6) & 0x3F] :  '=';
-		outstr[outindex + 3] = index + 2 < len ? b64table[block & 0x3F] :  '=';
+		outstr[outindex + 2] = index + 1 < len ? b64table[(block >> 6) & 0x3F] : '=';
+		outstr[outindex + 3] = index + 2 < len ? b64table[block & 0x3F] : '=';
 	}
 
 	return outstr;
@@ -209,7 +204,9 @@ void ttc_ws_free(ttc_ws_t *ws) {
 
 void ttc_ws_buffer_free(ttc_ws_buffer_t *buf) {
 	if (buf) {
-		free(buf->data);
+		if (buf->data) {
+			free(buf->data);
+		}
 		free(buf);
 	}
 }
@@ -220,12 +217,12 @@ ttc_ws_buffer_t *ttc_ws_read(ttc_ws_t *ws) {
 	uint16_t len16;
 	uint64_t len64, tmp, readin;
 
-	if(ws == NULL) {
+	if (ws == NULL) {
 		TTC_LOG_ERROR("WS is NULL");
 		return NULL;
 	}
 
-	if(ws->closed) {
+	if (ws->closed) {
 		TTC_LOG_WARN("WS is closed\n");
 		return NULL;
 	}
@@ -239,13 +236,13 @@ ttc_ws_buffer_t *ttc_ws_read(ttc_ws_t *ws) {
 	buffer.opcode = opcode & 0x7f;
 
 	len = len & 0x7f;
-	if(len == 126) {
+	if (len == 126) {
 		ttc_http_socket_read(ws->sock, &len16, 2, &readin);
 #if BYTE_ORDER == LITTLE_ENDIAN
 		len16 = ttc_ws_endian_swap16(len16);
 #endif
 		buffer.len = len16;
-	} else if(len == 127) {
+	} else if (len == 127) {
 		ttc_http_socket_read(ws->sock, &len16, 8, &readin);
 #if BYTE_ORDER == LITTLE_ENDIAN
 		len64 = ttc_ws_endian_swap64(len64);
@@ -255,13 +252,12 @@ ttc_ws_buffer_t *ttc_ws_read(ttc_ws_t *ws) {
 		buffer.len = len;
 	}
 
-
 	if (buffer.opcode == TTC_WS_CONN_CLOSE_FRAME) {
 		ws->closed = 1;
 	}
 
 	buffer.data = calloc(1, buffer.len + 1);
-	if(!buffer.data) {
+	if (!buffer.data) {
 		TTC_LOG_ERROR("Allocation error\n");
 		return NULL;
 	}
@@ -269,7 +265,7 @@ ttc_ws_buffer_t *ttc_ws_read(ttc_ws_t *ws) {
 	readin = 0;
 	buffer.data[buffer.len] = 0;
 
-	while(readin < buffer.len) {
+	while (readin < buffer.len) {
 		ttc_http_socket_read(ws->sock, &buffer.data[readin], buffer.len, &tmp);
 		readin += tmp;
 	}
@@ -278,16 +274,16 @@ ttc_ws_buffer_t *ttc_ws_read(ttc_ws_t *ws) {
 
 	if (buffer.opcode == TTC_WS_CONN_CLOSE_FRAME) {
 		ws->closed = 1;
-		buffer.close_code = ttc_ws_endian_swap16(*((uint16_t*)buffer.data));
+		buffer.close_code = ttc_ws_endian_swap16(*((uint16_t *) buffer.data));
 	}
 
-  ttc_ws_buffer_t *buffer_heap = calloc(1, sizeof(ttc_ws_buffer_t));
-  if (!buffer_heap) {
-    TTC_LOG_ERROR("TTC_WS_ERROR: allocation error\n");
-    free(buffer.data);
-    return NULL;
-  }
-  memcpy(buffer_heap, &buffer, sizeof(ttc_ws_buffer_t));
+	ttc_ws_buffer_t *buffer_heap = calloc(1, sizeof(ttc_ws_buffer_t));
+	if (!buffer_heap) {
+		TTC_LOG_ERROR("TTC_WS_ERROR: allocation error\n");
+		free(buffer.data);
+		return NULL;
+	}
+	memcpy(buffer_heap, &buffer, sizeof(ttc_ws_buffer_t));
 
 	return buffer_heap;
 }
@@ -299,7 +295,7 @@ int ttc_ws_write(ttc_ws_t *ws, ttc_ws_wrreq_t req) {
 	char *masked_data;
 	int ext_pos;
 
-	if(ws->closed) {
+	if (ws->closed) {
 		TTC_LOG_WARN("WS is closed\n");
 		return 1;
 	}
@@ -311,30 +307,28 @@ int ttc_ws_write(ttc_ws_t *ws, ttc_ws_wrreq_t req) {
 	len_needed += req.mask ? 4 : 0;
 
 	frame = calloc(1, len_needed + 1);
-	if(!frame) {
+	if (!frame) {
 		TTC_LOG_ERROR("Allocation Error\n");
 		return 1;
 	}
 
-	if(req.len > 125 && req.len < UINT16_MAX) {
+	if (req.len > 125 && req.len < UINT16_MAX) {
 		frame->len = 126;
 		frame->extdata[ext_pos++] = (req.len >> 8) & 0xff;
 		frame->extdata[ext_pos++] = (req.len) & 0xff;
-	} else if(req.len > UINT16_MAX) {
+	} else if (req.len > UINT16_MAX) {
 		frame->len = 127;
 	} else {
 		frame->len = req.len;
 	}
 
 	/*Mask the input data if mask is set(Client)*/
-	if(req.mask) {
+	if (req.mask) {
 
 		/*generate a random data mask*/
 		array_mask = ttc_random_array(4);
 
-
 		masked_data = ttc_ws_mask_data(array_mask, req.data, req.len);
-
 
 		frame->extdata[ext_pos++] = array_mask[0];
 		frame->extdata[ext_pos++] = array_mask[1];
@@ -346,20 +340,17 @@ int ttc_ws_write(ttc_ws_t *ws, ttc_ws_wrreq_t req) {
 		masked_data = req.data;
 	}
 
-
 	frame->fin = req.fin;
 	frame->opcode = req.opcode;
 	frame->res = req.res;
 	frame->mask = req.mask;
-
 
 	pthread_mutex_lock(&ws->wlock);
 	ttc_http_socket_send_data(ws->sock, frame, len_needed);
 	ttc_http_socket_send_data(ws->sock, masked_data, req.len);
 	pthread_mutex_unlock(&ws->wlock);
 
-
-	if(req.mask) {
+	if (req.mask) {
 		free(masked_data);
 	}
 	free(frame);
@@ -378,14 +369,14 @@ ttc_ws_t *ttc_ws_create_from_host(const char *host, const char *port, SSL_CTX *c
 
 	/*Create new websocket*/
 	sock = ttc_http_new_socket(host, port, ctx);
-	if(!sock) {
+	if (!sock) {
 		TTC_LOG_ERROR("Failed to allocate WS socket\n");
 		return NULL;
 	}
 
 	ws_out = calloc(1, sizeof(ttc_ws_t));
 
-	if(!ws_out) {
+	if (!ws_out) {
 		TTC_LOG_ERROR("Allocation Error\n");
 		return NULL;
 	}
@@ -396,14 +387,14 @@ ttc_ws_t *ttc_ws_create_from_host(const char *host, const char *port, SSL_CTX *c
 	pthread_mutex_init(&ws_out->rlock, NULL);
 
 	ws_key_raw = ttc_random_array(16);
-	if(!ws_key_raw) {
+	if (!ws_key_raw) {
 		TTC_LOG_ERROR("Allocation Error\n");
 		free(ws_out);
 		return NULL;
 	}
 
-	b64key = ttc_b64_encode(ws_key_raw, 16);
-	if(!b64key) {
+	b64key = ttc_ws_b64_encode(ws_key_raw, 16);
+	if (!b64key) {
 		TTC_LOG_ERROR("Allocation Error\n");
 		free(ws_key_raw);
 		free(ws_out);
@@ -419,11 +410,10 @@ ttc_ws_t *ttc_ws_create_from_host(const char *host, const char *port, SSL_CTX *c
 	ttc_http_request_add_header(request, "Upgrade", "websocket");
 	ttc_http_request_add_header(request, "Connection", "Upgrade");
 
-
 	length = snprintf(NULL, 0, "%s://%s", ctx ? "wss" : "ws", host);
 
 	endpoint = calloc(1, length + 1);
-	if(!endpoint) {
+	if (!endpoint) {
 		TTC_LOG_ERROR("Allocation Error\n");
 		ttc_http_socket_free(ws_out->sock);
 		free(b64key);
@@ -439,7 +429,7 @@ ttc_ws_t *ttc_ws_create_from_host(const char *host, const char *port, SSL_CTX *c
 	ttc_http_socket_send_request(ws_out->sock, request);
 
 	response = ttc_http_get_response(ws_out->sock);
-	if(response->status != 101) {
+	if (response->status != 101) {
 		TTC_LOG_ERROR("websocket request responded with invalid status code %d\n", response->status);
 		free(ws_out);
 		ws_out = NULL;
@@ -453,4 +443,3 @@ ttc_ws_t *ttc_ws_create_from_host(const char *host, const char *port, SSL_CTX *c
 
 	return ws_out;
 }
-

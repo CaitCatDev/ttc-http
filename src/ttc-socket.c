@@ -211,13 +211,13 @@ int ttc_http_socket_send_data(ttc_http_socket_t *sock, void *data, uint64_t leng
 	switch (sock->type) {
 		case TtcSocketSSL:
 			SSL_write(sock->ssl, data, length);
-			return 0;
+			return 1;
 		case TtcSocketHTTP:
 			send(sock->fd, data, length, 0);
-			return 0;
+			return 1;
 	}
 
-	return -1;
+	return 0;
 }
 
 int ttc_http_socket_send_request(ttc_http_socket_t *sock, ttc_http_request_t *request) {
@@ -226,13 +226,13 @@ int ttc_http_socket_send_request(ttc_http_socket_t *sock, ttc_http_request_t *re
 	switch (sock->type) {
 		case TtcSocketSSL:
 			SSL_write(sock->ssl, request->req_str, strlen(request->req_str));
-			return 0;
+			return 1;
 		case TtcSocketHTTP:
 			send(sock->fd, request->req_str, strlen(request->req_str), 0);
-			return 0;
+			return 1;
 	}
 
-	return -1;
+	return 0;
 }
 
 void ttc_http_socket_free(ttc_http_socket_t *socket) {

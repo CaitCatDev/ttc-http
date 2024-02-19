@@ -1,0 +1,91 @@
+.TH TTCHTTP 3 19-FEB-2024 ttc_request-manpages
+.SH NAME
+
+ttc_http_new_request, ttc_http_request_set_method, ttc_http_request_set_path, ttc_http_request_set_http_version, ttc_http_request_add_header, ttc_http_request_del_header, ttc_http_request_set_data, ttc_http_request_build, ttc_http_request_free
+
+.SH LIBRARY
+TTCHTTP request builder functions (ttc-http, -lttc-http)
+
+.SH SYNOPSIS
+.nf
+.PP
+.B "ttc_http_request_t *ttc_http_new_request();"
+.B "void ttc_http_request_free(ttc_http_request_t *request);"
+.B "int ttc_http_request_build(ttc_http_request_t *request);"
+.B "int ttc_http_request_set_method(ttc_http_request_t *request, const char *method);"
+.B "int ttc_http_request_set_path(ttc_http_request_t *request, const char *path);"
+.B "int ttc_http_request_set_http_version(ttc_http_request_t *request, const char *version);"
+.B "int ttc_http_request_set_data(ttc_http_request_t *request, const char *data);"
+.B "int ttc_http_request_add_header(ttc_http_request_t *request, const char *name, const char *value);"
+.B "void ttc_http_request_del_header("ttc_http_request_t *request, const char *name);"
+.PP
+
+.SH DESCRIPTION
+.B The functions above provide an interface to build, modify and reuse HTTP requests as many time as needed.
+Allowing for simple management of HTTP requests.
+
+.B ttc_http_new_request. Create a new http request returns a valid opaque pointer to the new request
+on success or NULL on error.
+
+.B ttc_http_request_free. Frees a created request does nothing if NULL is passed in.
+
+.B ttc_http_request_build. This function doesn't need to be called and will be called internally
+when it is needed but if you want to ensure that the request is built you can do so with this
+function. Returns either 0 on success or anything else on failure in failed request is left unchanged
+
+.B ttc_http_request_*. These set of functions will set the relevant data field of the request with
+the value passed into the function. Note these functions make a copy of the date you pass in. The
+reason for this is to prevent you from freeing the string accidentally before freeing the request.
+This function returns 0 on success anything else should be considered an error if an error does
+occur the request is left in a unchanged state. Meaning it is identical to how it was before, the
+call was mode.
+
+.B ttc_http_request_add_header. This adds a set of header and value to the header list of the
+request headers meaning when built the header list will now contain that header and value pair. Name
+is the name of the header e.g. "Content-Type" and value is the value e.g. "text/html". Returns 0 on
+success anything else is failure if failed the request will be left in an unchanged state.
+
+.B ttc_http_request_del_header. This deletes a header from the list of headers if it exists. Name is
+the of the header to delete. e.g. Content-Type
+
+.SH RETURN VALUES
+.nf
+.PP
+.B ttc_http_request_free, ttc_http_request_del_header - returns nothing
+.B ttc_http_request_set_*, ttc_http_request_add_header, ttc_http_request_build - returns int see below.
+.B 	0 = success.
+.B 	-1 = error check error no.
+
+.B ttc_http_new_request - returns pointer
+.B valid pointer = success
+.B NULL = error
+.pp
+
+.sh data structures
+.nf
+.pp
+
+.b ttc_http_request_t is a opaque structure containing the request information.
+
+.sh enums and defined values
+.nf
+.pp
+
+#define TTC_HTTP_METHOD_GET "GET"
+#define TTC_HTTP_METHOD_POST "POST"
+#define TTC_HTTP_METHOD_DELETE "DELETE"
+#define TTC_HTTP_METHOD_HEAD "HEAD"
+#define TTC_HTTP_METHOD_PUT "PUT"
+#define TTC_HTTP_METHOD_CONNECT "CONNECT"
+#define TTC_HTTP_METHOD_OPTIONS "OPTIONS"
+#define TTC_HTTP_METHOD_TRACE "TRACE"
+#define TTC_HTTP_METHOD_PATCH "PATCH"
+
+#define HTTP_VER_09 ""
+#define HTTP_VER_10 "HTTP/1.0"
+#define HTTP_VER_11 "HTTP/1.1"
+#define HTTP_VER_2 "HTTP/2"
+#define HTTP_VER_3 "HTTP/3"
+
+.sh see also
+.br ttc-sockets(3)

@@ -1,0 +1,117 @@
+.TH TTCHTTP 3 19-FEB-2024 ttc_websocket-manpages
+.SH NAME
+
+ttc_ws_free, ttc_ws_buffer_free, ttc_ws_read, ttc_ws_write, ttc_ws_create_from_host,
+ttc_ws_endian_swap16, ttc_ws_endian_swap32, ttc_ws_endian_swap64
+
+.SH LIBRARY
+TTC-HTTP Websocket library functions (ttc-http, -lttc-http)
+
+.SH SYNOPSIS
+.nf
+.PP
+.B "int ttc_ws_write(ttc_wss_t *socket , ttc_ws_wrreq_t request);"
+.B "ttc_ws_buffer_t *ttc_ws_read(ttc_wss_t *socket);"
+.B "void ttc_ws_free(ttc_ws_t *ws);"
+.B "ttc_ws_t *ttc_ws_create_from_host(const char *host, const char *port, SSL_CTX *ctx);"
+.B "ttc_ws_t *ttc_ws_create_from_host(const char *host, const char *port);"
+.B "void ttc_ws_buffer_free(ttc_ws_buffer_t *buf);"
+.B "uintN_t ttc_ws_endian_swapN(uintN_t)"
+.PP
+
+.SH DESCRIPTION
+.B The functions provided here give access to WebSockets in a relatively simple and lightweight way to interface with these sockets. Intended to provide a more simple way to work with these sockets indepentant of any other external libraries barring openssl when compiled with SSL support.
+
+.B ttc_ws_create_from_host function creates ttc_ws_t websocket structure intended to be passed to
+websocket read and write functions. They return a pointer to the ttc_ws_t structure and will return
+NULL on an error, errno should be set from system calls we call. The SSL_CTX *ctx is optional if
+passed the socket will be created with SSL enabled else it will be a plain text socket.
+
+.B ttc_ws_read, return a valid pointer a ttc_ws_buffer_t structure or NULL on error.
+
+.B ttc_ws_write this function takes in a ttc_ws_wrreq_t structure and will write the data provided in that structure to the underlying socket. Applying any rules provided in the write request, e.g. masking the data, setting final or opcode bits, setting length.
+
+.B ttc_ws_free, ttc_ws_buffer_free. These functions free ttc_ws_t and ttc_ws_buffer_t structure
+pointers. These functions return a void aka nothing as they SHOULD NOT FAIL unless you provide a bad
+pointer. Or a pointer to a type that is not ttc_ws_t or ttc_ws_buffer_t. If their argument is a NULL pointer no action will be performed as in free().
+
+.B ttc_ws_endian_swapN this is catch all for all the endian swapping functions this is used
+internally but is exposed if you want to use or need a endian swap as most computers are little
+endian but networks are big endian so they exposed for ease of use in case you need them. They
+return the input number in the opposite endian.
+
+.SH RETURN VALUES
+.nf
+.PP
+.B ttc_ws_free(), ttc_ws_buffer_free() - returns nothing
+.B ttc_ws_write(), - returns int see below.
+.B 	0 = success.
+.B 	-1 = error check errno
+
+.B ttc_ws_read(), returns pointer to ttc_ws_buffer_t:
+.B	VALID_PTR = success.
+.B	NULL = Error.
+
+.B ttc_ws_create_from_host() - Returns a pointer to ttc_ws_t
+.B	VALID_PTR = success.
+.B	NULL = Error.
+
+
+.SH DATA STRUCTURES
+.nf
+.PP
+.B "ttc_ws_wrreq_t is a public data structure intended to be used by client programs using these libraries."
+	ttc_ws_wrreq_t {
+		bool fin; /*Final part of this message*/
+		bool mask; /*data should be masked before it's sent*/
+		uint8_t res: 3; /*Reserved extensions*/
+		uint8_t opcode: 4; /*Websocket frame opcode*/
+		size_t len; /*Length of data field*/
+		char *data; /*Data to be written*/
+	};
+
+.B "ttc_ws_buffer_t is a public data structure return by ttc_ws_read functions. Containing the data returned by a websocket read."
+	typedef struct ttc_ws_buffer {
+		bool fin; /*final part of this message*/
+		uint8_t opcode; /*Websocket frame opcode*/
+		char *data; /*masked data*/
+		size_t len; /*length of data*/
+		char mask[4]; /*Mask bytes*/
+		uint16_t close_code; /*close code set if frame close*/
+	} ttc_ws_buffer_t;
+
+.B "ttc_ws_t is an opaque pointer to a websocket data structure intended to be passed to internal library functions client programs should not attempt to dereference it. Instead passing it to functions that take it as an argument"
+
+.SH Enums and Defined values
+.nf
+.PP
+#define TTC_WS_CONTINUATION_FRAME 0x0
+#define TTC_WS_TEXT_FRAME 0x1
+#define TTC_WS_BIN_FRAME 0x2
+
+#define TTC_WS_CONN_CLOSE_FRAME 0x8
+#define TTC_WS_PING_FRAME 0x9
+#define TTC_WS_PONG_FRAME 0xa
+
+#define TTC_WS_FRAME_FINAL 0x80;
+
+enum TTC_WS_CLOSE_CODES {
+	TtcWsCloseNormal = 1000,
+	TtcWsGoingAway = 1001,
+	TtcWsProtocolErr = 1002,
+	TtcWsInvalidData = 1003,
+	TtcWsCloseRes = 1004,
+	TtcWsCloseRes2 = 1005,
+	TtcWsCloseResAbnormal = 1006,
+	TtcWsDataTypeError = 1007,
+	TtcWsPolicyViolation = 1008,
+	TtcWsMessageToBig = 1009,
+	TtcWsExtNotSupported = 1010,
+	TtcWsRequestFailed = 1011,
+	TtcWsTLSFailureRes = 1015,
+};
+
+.SH SEE ALSO
+.BR SSL_new(3)
+.BR SSL_CTX_new(3)
+.BR ssl(7)

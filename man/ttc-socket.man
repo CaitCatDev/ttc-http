@@ -1,0 +1,69 @@
+.TH TTCHTTP 3 19-FEB-2024 ttc_socket-manpages
+.SH NAME
+
+
+
+ttc_http_new_socket, ttc_http_new_socket_hints, ttc_http_socket_poll, ttc_http_socket_peek,
+ttc_http_socket_read, ttc_http_socket_send_request, ttc_http_socket_send_data, ttc_http_socket_free
+
+.SH LIBRARY
+TTCHTTP socket functions (ttc-http, -lttc-http)
+
+.SH SYNOPSIS
+.nf
+.PP
+.B "ttc_http_socket_t *ttc_http_new_socket(const char *host, const char *port, SSL_CTX *ctx);"
+.B "ttc_http_socket_t *ttc_http_new_socket_hints(const char *host, const char *port, SSL_CTX *ctx,
+																						 const struct addrinfo *hints);"
+.B "int ttc_http_socket_poll(ttc_http_socket_t *sock, short events, short *revents);"
+.B "int ttc_http_socket_peek(ttc_http_socket_t *sock, void *buf, size_t in, size_t *out);"
+.B "int ttc_http_socket_read(ttc_http_socket_t *sock, void *buf, size_t in, size_t *out);"
+.B "int ttc_http_socket_send_request(ttc_http_socket_t *sock, ttc_http_request_t *request);"
+.B "int ttc_http_socket_send_data(ttc_http_socket_t *sock, void *data, uint64_t length);"
+.B "void ttc_http_socket_free(ttc_http_socket_t *socket);"
+.PP
+
+.SH DESCRIPTION
+.B These functions provide an abstraction to write a request to a socket from a ttc_http_request_t
+along with obfuscating the difference between a unencrypted plain text socket and a SSL socket,
+
+.B ttc_http_new_socket, ttc_http_new_socket_hints. Both of these create a new socket if
+ttc_http_new_socket is called it will attempt to create a SOCK Stream through the use of
+getaddrinfo. However if a different socket type is desired it can be created with
+ttc_http_new_socket_hints, where the hints value is the hints to be passed to getaddrinfo.
+
+.B ttc_http_socket_free frees a socket and memory relating to it.
+
+.B ttc_http_socket_peek, ttc_http_socket_read read data from the socket, in is the amount of bytes
+desired to be read/the overall buffer size, *out is a point to size_t which is the actual size read,
+buffer is the buffer for data to be read into. Returns 1 on success and 0 on error.
+
+.B ttc_http_socket_poll, poll the socket for desired events and return the revents in the revents
+pointer passed into the function.
+
+.B ttc_http_socket_send_data, ttc_http_socket_send_request. Send either raw data to a socket or send
+a preconfigured ttc_http_request_t to the socket. Returns 1 on success, 0 on failure.
+
+.SH RETURN VALUES
+.nf
+.PP
+.B ttc_http_socket_send_request, ttc_http_socket_send_data, ttc_http_socket_peek, ttc_http_socket_read
+.B 	1 = success.
+.B 	0 = error check error no.
+
+.B ttc_http_new_socket, ttc_http_new_socket_hints - returns pointer
+.B valid pointer = success
+.B NULL = error
+.PP
+
+.SH DATA STRUCTURES
+.nf
+.PP
+
+.B ttc_http_socket_t is a opaque structure containing the socket interface.
+
+.SH SEE ALSO
+.BR SSL_new(3)
+.BR SSL_CTX_new(3)
+.BR ssl(7)
+.BR ttc-requests(3)
