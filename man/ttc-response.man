@@ -17,7 +17,8 @@ TTCHTTP response functions (ttc-http, -lttc-http)
 .B ttc_http_get_response get a HTTP response from the ttc_http_socket_t socket. Returns a valid
 pointer on success or NULL on error.
 
-.B ttc_http_response_free free a HTTP response that has been obtained from ttc_http_get_response
+.B ttc_http_response_free free a HTTP response that has been obtained from ttc_http_get_response.
+If the pointer is NULL no action is performed.
 
 .SH DATA STRUCTURES
 .nf

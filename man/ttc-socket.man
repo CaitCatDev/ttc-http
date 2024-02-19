@@ -14,7 +14,7 @@ TTCHTTP socket functions (ttc-http, -lttc-http)
 .PP
 .B "ttc_http_socket_t *ttc_http_new_socket(const char *host, const char *port, SSL_CTX *ctx);"
 .B "ttc_http_socket_t *ttc_http_new_socket_hints(const char *host, const char *port, SSL_CTX *ctx,
-																						 const struct addrinfo *hints);"
+.B "                                             const struct addrinfo *hints);"
 .B "int ttc_http_socket_poll(ttc_http_socket_t *sock, short events, short *revents);"
 .B "int ttc_http_socket_peek(ttc_http_socket_t *sock, void *buf, size_t in, size_t *out);"
 .B "int ttc_http_socket_read(ttc_http_socket_t *sock, void *buf, size_t in, size_t *out);"
@@ -25,7 +25,7 @@ TTCHTTP socket functions (ttc-http, -lttc-http)
 
 .SH DESCRIPTION
 .B These functions provide an abstraction to write a request to a socket from a ttc_http_request_t
-along with obfuscating the difference between a unencrypted plain text socket and a SSL socket,
+along with obfuscating the difference between a unencrypted plain text socket and a SSL socket.
 
 .B ttc_http_new_socket, ttc_http_new_socket_hints. Both of these create a new socket if
 ttc_http_new_socket is called it will attempt to create a SOCK Stream through the use of
@@ -49,11 +49,10 @@ a preconfigured ttc_http_request_t to the socket. Returns 1 on success, 0 on fai
 .PP
 .B ttc_http_socket_send_request, ttc_http_socket_send_data, ttc_http_socket_peek, ttc_http_socket_read
 .B 	1 = success.
-.B 	0 = error check error no.
+.B 	0 = error. You can get more information via errno.
 
-.B ttc_http_new_socket, ttc_http_new_socket_hints - returns pointer
-.B valid pointer = success
-.B NULL = error
+.B ttc_http_new_socket, ttc_http_new_socket_hints - returns either a valid pointer or NULL in case
+of an error
 .PP
 
 .SH DATA STRUCTURES
