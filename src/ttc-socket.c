@@ -25,8 +25,6 @@
 #include <ttc-http/private/sockets.h>
 
 int ttc_http_socket_peek(ttc_http_socket_t *sock, void *buf, size_t in, size_t *out) {
-	int res;
-
 	switch (sock->type) {
 		case TtcSocketSSL:
 			return SSL_peek_ex(sock->ssl, buf, in, out);
@@ -166,7 +164,7 @@ static SSL *ttc_http_ssl_socket_setup(SSL_CTX *ctx, int fd, const char *hostname
 
 	SSL_CTX_set_default_verify_paths(ctx);
 
-	if ((res = SSL_connect(ssl)) != 1) {
+	if (SSL_connect(ssl) != 1) {
 		SSL_free(ssl);
 		TTC_LOG_ERROR("Failed to SSL connect to host: %s\n", hostname);
 		return NULL;
