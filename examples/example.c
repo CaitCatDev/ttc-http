@@ -70,6 +70,12 @@ int main(int argc, char **argv) {
 	}
 
 	res = ttc_http_socket_send_request(sock, request);
+	if (res) {
+		printf("Error sending request!\n");
+		SSL_CTX_free(ctx);
+		ttc_http_request_free(request);
+		return 1;
+	}
 	response = ttc_http_get_response(sock);
 
 	printf("%s\n", response->data);
