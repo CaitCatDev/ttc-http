@@ -158,9 +158,21 @@ int ttc_http_request_add_header(ttc_http_request_t *request, const char *name, c
 }
 
 void ttc_http_request_del_header(ttc_http_request_t *request, const char *name) {
+	if (!request->headers) {
+		return;
+	}
+
 	ttc_http_request_headers_t *tmp, *prev;
 
-	for(tmp = request->headers; tmp; tmp = tmp->next) {
+	if (strcmp(request->headers->name, name)) {
+		tmp = request->headers->next;
+		ttc_http_header_free(request->headers);
+		request->headers = tmp;
+		return;
+	}
+
+	prev = request->headers;
+	for(tmp = request->headers->next; tmp; tmp = tmp->next) {
 		if(strncmp(tmp->name, name, strlen(name)) == 0) {
 			prev->next = tmp->next;
 			ttc_http_header_free(tmp);
