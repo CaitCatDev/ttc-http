@@ -57,7 +57,7 @@ int ttc_http_chunked_to_unchunk(ttc_http_response_t *response) {
 int ttc_https_parse_chunked_data(ttc_http_response_t *response,
 		char *encoding, ttc_http_socket_t *sock) {
 	uint64_t size, length, useage, readout, total_size, hold;
-	char *data, outdata;
+	char *data;
 
 	response->data = NULL;
 	/*according to RFC https://www.rfc-editor.org/rfc/rfc2616#section-4.2
@@ -159,10 +159,10 @@ int ttc_https_response_parse_headers(ttc_http_response_t *response, ttc_http_soc
 }
 
 ttc_http_response_t *ttc_http_get_response(ttc_http_socket_t *sock) {
-	ttc_http_response_t *response, local;
+	ttc_http_response_t *response;
 	int res;
 	short revents = 0;
-	char *data, *header_end, transfer[257];
+	char *data, transfer[257];
 	size_t size, length;
 
 	transfer[256] = 0;

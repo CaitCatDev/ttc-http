@@ -243,7 +243,7 @@ ttc_ws_buffer_t *ttc_ws_read(ttc_ws_t *ws) {
 #endif
 		buffer.len = len16;
 	} else if (len == 127) {
-		ttc_http_socket_read(ws->sock, &len16, 8, &readin);
+		ttc_http_socket_read(ws->sock, &len64, 8, &readin);
 #if BYTE_ORDER == LITTLE_ENDIAN
 		len64 = ttc_ws_endian_swap64(len64);
 #endif
