@@ -56,6 +56,13 @@ return the input number in the opposite endian.
 .B	VALID_PTR = success.
 .B	NULL = Error.
 
+.SH THREAD SAFETY
+.nf
+.PP
+.B ttc_ws_write() is MT-Safe by using a Mutex internally.
+
+.B ttc_ws_read() is NOT MT-Safe because usually there is only one thread reading. If you have more
+than on thread reading the socket you need to use a locking mechanism yourself.
 
 .SH DATA STRUCTURES
 .nf
