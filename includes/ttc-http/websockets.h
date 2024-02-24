@@ -57,6 +57,7 @@ void ttc_ws_buffer_free(ttc_ws_buffer_t *buf);
 ttc_ws_buffer_t *ttc_ws_read(ttc_ws_t *ws);
 int ttc_ws_write(ttc_ws_t *ws, ttc_ws_wrreq_t req);
 ttc_ws_t *ttc_ws_create_from_host(const char *host, const char *port, SSL_CTX *ctx);
+int ttc_ws_poll(ttc_ws_t *ws, short events, short *revents);
 
 /** All though this isn't the main purpose of the library just
  *  expose these symbols in case someone wants to use them

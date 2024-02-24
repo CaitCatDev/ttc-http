@@ -443,3 +443,7 @@ ttc_ws_t *ttc_ws_create_from_host(const char *host, const char *port, SSL_CTX *c
 
 	return ws_out;
 }
+
+int ttc_ws_poll(ttc_ws_t *ws, short events, short *revents) {
+	return ttc_http_socket_poll(ws->sock, events, revents);
+}
