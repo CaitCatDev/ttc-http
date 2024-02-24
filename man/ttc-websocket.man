@@ -48,13 +48,9 @@ return the input number in the opposite endian.
 .B 	0 = success.
 .B 	-1 = error check errno
 
-.B ttc_ws_read(), returns pointer to ttc_ws_buffer_t:
-.B	VALID_PTR = success.
-.B	NULL = Error.
+.B ttc_ws_read(), returns a pointer to ttc_ws_buffer_t on success or NULL in case of an error
 
-.B ttc_ws_create_from_host() - Returns a pointer to ttc_ws_t
-.B	VALID_PTR = success.
-.B	NULL = Error.
+.B ttc_ws_create_from_host() - Returns a pointer to ttc_ws_t on success or NULL in case of an error
 
 
 .SH DATA STRUCTURES

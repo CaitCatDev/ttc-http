@@ -17,7 +17,7 @@ TTCHTTP request builder functions (ttc-http, -lttc-http)
 .B "int ttc_http_request_set_http_version(ttc_http_request_t *request, const char *version);"
 .B "int ttc_http_request_set_data(ttc_http_request_t *request, const char *data);"
 .B "int ttc_http_request_add_header(ttc_http_request_t *request, const char *name, const char *value);"
-.B "void ttc_http_request_del_header("ttc_http_request_t *request, const char *name);"
+.B "void ttc_http_request_del_header(ttc_http_request_t *request, const char *name);"
 .PP
 
 .SH DESCRIPTION
@@ -31,14 +31,15 @@ on success or NULL on error.
 
 .B ttc_http_request_build. This function doesn't need to be called and will be called internally
 when it is needed but if you want to ensure that the request is built you can do so with this
-function. Returns either 0 on success or anything else on failure in failed request is left unchanged
+function. Returns either 0 on success or anything else on failure. If it fails the request is left
+unchanged.
 
-.B ttc_http_request_*. These set of functions will set the relevant data field of the request with
-the value passed into the function. Note these functions make a copy of the date you pass in. The
-reason for this is to prevent you from freeing the string accidentally before freeing the request.
-This function returns 0 on success anything else should be considered an error if an error does
-occur the request is left in a unchanged state. Meaning it is identical to how it was before, the
-call was mode.
+.B ttc_http_request_set_*. These set of functions will set the relevant data field of the request
+with the value passed into the function. Note these functions make a copy of the date you pass in.
+The reason for this is to prevent you from freeing the string accidentally before freeing the
+request. This function returns 0 on success anything else should be considered an error if an error
+does occur the request is left in a unchanged state. Meaning it is identical to how it was before,
+the call was mode.
 
 .B ttc_http_request_add_header. This adds a set of header and value to the header list of the
 request headers meaning when built the header list will now contain that header and value pair. Name
@@ -46,7 +47,7 @@ is the name of the header e.g. "Content-Type" and value is the value e.g. "text/
 success anything else is failure if failed the request will be left in an unchanged state.
 
 .B ttc_http_request_del_header. This deletes a header from the list of headers if it exists. Name is
-the of the header to delete. e.g. Content-Type
+the of the header to delete. e.g. Content-Type.
 
 .SH RETURN VALUES
 .nf
@@ -54,23 +55,20 @@ the of the header to delete. e.g. Content-Type
 .B ttc_http_request_free, ttc_http_request_del_header - returns nothing
 .B ttc_http_request_set_*, ttc_http_request_add_header, ttc_http_request_build - returns int see below.
 .B 	0 = success.
-.B 	-1 = error check error no.
+.B 	-1 = error. You can get more information via errno.
 
-.B ttc_http_new_request - returns pointer
-.B valid pointer = success
-.B NULL = error
-.pp
+.B ttc_http_new_request - returns a valid pointer on success and NULL in case of an error.
+.PP
 
-.sh data structures
+.SH DATA STRUCTURES
+.NF
+.PP
+
+.B ttc_http_request_t is a opaque structure containing the request information.
+
+.SH ENUMS AND DEFINED VALUES
 .nf
-.pp
-
-.b ttc_http_request_t is a opaque structure containing the request information.
-
-.sh enums and defined values
-.nf
-.pp
-
+.PP
 #define TTC_HTTP_METHOD_GET "GET"
 #define TTC_HTTP_METHOD_POST "POST"
 #define TTC_HTTP_METHOD_DELETE "DELETE"
@@ -87,5 +85,5 @@ the of the header to delete. e.g. Content-Type
 #define HTTP_VER_2 "HTTP/2"
 #define HTTP_VER_3 "HTTP/3"
 
-.sh see also
-.br ttc-sockets(3)
+.SH see also
+.BR ttc-sockets(3)
