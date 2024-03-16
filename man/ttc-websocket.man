@@ -52,6 +52,13 @@ return the input number in the opposite endian.
 
 .B ttc_ws_create_from_host() - Returns a pointer to ttc_ws_t on success or NULL in case of an error
 
+.SH THREAD SAFETY
+.nf
+.PP
+.B ttc_ws_write() is MT-Safe by using a Mutex internally.
+
+.B ttc_ws_read() is NOT MT-Safe because usually there is only one thread reading. If you have more
+than on thread reading the socket you need to use a locking mechanism yourself.
 
 .SH DATA STRUCTURES
 .nf

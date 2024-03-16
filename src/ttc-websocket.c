@@ -10,7 +10,7 @@
 #include <ttc-log.h>
 
 struct ttc_ws {
-	pthread_mutex_t rlock, wlock;
+	pthread_mutex_t wlock;
 
 	ttc_http_socket_t *sock;
 
@@ -193,7 +193,6 @@ static char *ttc_ws_b64_encode(const uint8_t *data, size_t len) {
 void ttc_ws_free(ttc_ws_t *ws) {
 	if (ws) {
 		pthread_mutex_destroy(&ws->wlock);
-		pthread_mutex_destroy(&ws->rlock);
 
 		/*Free the underlying connection*/
 		ttc_http_socket_free(ws->sock);
@@ -226,8 +225,6 @@ ttc_ws_buffer_t *ttc_ws_read(ttc_ws_t *ws) {
 		TTC_LOG_WARN("WS is closed\n");
 		return NULL;
 	}
-
-	pthread_mutex_lock(&ws->rlock);
 
 	ttc_http_socket_read(ws->sock, &opcode, 1, &readin);
 	ttc_http_socket_read(ws->sock, &len, 1, &readin);
@@ -269,8 +266,6 @@ ttc_ws_buffer_t *ttc_ws_read(ttc_ws_t *ws) {
 		ttc_http_socket_read(ws->sock, &buffer.data[readin], buffer.len, &tmp);
 		readin += tmp;
 	}
-
-	pthread_mutex_unlock(&ws->rlock);
 
 	if (buffer.opcode == TTC_WS_CONN_CLOSE_FRAME) {
 		ws->closed = 1;
@@ -384,8 +379,6 @@ ttc_ws_t *ttc_ws_create_from_host(const char *host, const char *port, SSL_CTX *c
 	ws_out->sock = sock;
 
 	pthread_mutex_init(&ws_out->wlock, NULL);
-	pthread_mutex_init(&ws_out->rlock, NULL);
-
 	ws_key_raw = ttc_random_array(16);
 	if (!ws_key_raw) {
 		TTC_LOG_ERROR("Allocation Error\n");
@@ -442,4 +435,8 @@ ttc_ws_t *ttc_ws_create_from_host(const char *host, const char *port, SSL_CTX *c
 	free(endpoint);
 
 	return ws_out;
+}
+
+int ttc_ws_poll(ttc_ws_t *ws, short events, short *revents) {
+	return ttc_http_socket_poll(ws->sock, events, revents);
 }
